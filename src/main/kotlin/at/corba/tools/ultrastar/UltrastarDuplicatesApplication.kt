@@ -1,4 +1,4 @@
-package at.corba.startertemplate
+package at.corba.tools.ultrastar
 
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.SpringApplication
@@ -8,8 +8,8 @@ import picocli.CommandLine
 import kotlin.system.exitProcess
 
 @SpringBootApplication
-class StarterTemplateApplication(
-    private val commandLineParameter: StarterTemplateParameter
+class UltrastarDuplicatesApplication(
+    private val commandLineParameter: UltrastarDuplicatesParameter
 ) : CommandLineRunner {
     override fun run(vararg args: String?) {
         CommandLine(commandLineParameter).execute(*args)
@@ -17,6 +17,6 @@ class StarterTemplateApplication(
 }
 
 fun main(args: Array<String>) {
-    val context = runApplication<StarterTemplateApplication>(*args)
+    val context = runApplication<UltrastarDuplicatesApplication>(*args)
     exitProcess(SpringApplication.exit(context))
 }

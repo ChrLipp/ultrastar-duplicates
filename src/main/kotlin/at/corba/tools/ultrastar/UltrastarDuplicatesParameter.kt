@@ -1,5 +1,7 @@
-package at.corba.startertemplate
+package at.corba.tools.ultrastar
 
+import at.corba.tools.ultrastar.libs.FileVersionProvider
+import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import picocli.CommandLine
 
@@ -12,7 +14,9 @@ import picocli.CommandLine
     mixinStandardHelpOptions = true,
     versionProvider = FileVersionProvider::class)
 @Component
-class StarterTemplateParameter : Runnable {
+class UltrastarDuplicatesParameter : Runnable {
+    /** The logger */
+    private val log = KotlinLogging.logger {}
 
     @CommandLine.Option(names = ["-o", "--option"], description = ["Provide some option."])
     private var option : String = ""
@@ -21,6 +25,6 @@ class StarterTemplateParameter : Runnable {
      * Place your application logic entry point here.
      */
     override fun run() {
-        println(option)
+        log.info(option)
     }
 }

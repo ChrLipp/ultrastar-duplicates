@@ -31,12 +31,8 @@ dependencies {
 // Variables and constants
 ext {
 	ARGS = [
-		// help
-		'-h'
-		// version
-//		'-V'
 		// option
-//		'-o', 'Argument'
+		'-o', 'Argument'
 	]
 }
 
