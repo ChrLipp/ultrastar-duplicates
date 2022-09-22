@@ -31,8 +31,9 @@ dependencies {
 // Variables and constants
 ext {
 	ARGS = [
-		// option
-		'-o', 'Argument'
+//		'-V'
+		'-c', '/Users/christian/Music/UltraStar Deluxe/Songs Dominik',
+		'-s', '/Users/christian/Music/UltraStar Deluxe/'
 	]
 }
 

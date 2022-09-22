@@ -1,4 +1,4 @@
-package at.corba.tools.ultrastar
+package at.corba.tools.ultrastar.duplicates
 
 import org.springframework.context.annotation.Configuration
 

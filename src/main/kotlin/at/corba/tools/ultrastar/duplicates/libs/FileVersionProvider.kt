@@ -1,4 +1,4 @@
-package at.corba.tools.ultrastar.libs
+package at.corba.tools.ultrastar.duplicates.libs
 
 import picocli.CommandLine
 import java.io.File

@@ -7,7 +7,7 @@ task generateVersionTxt {
 	ext.versionFile = file("$genOutputDir/version.txt")
 	outputs.file(versionFile)
 	doFirst {
-		ext.versionFile.text = "$version"
+		ext.versionFile.text = "${rootProject.name} $version"
 	}
 }
 
