@@ -1,6 +1,7 @@
 package at.corba.tools.ultrastar.duplicates
 
 import at.corba.tools.ultrastar.duplicates.FileCompareResults.BOTH_FILES_ARE_NOT_EXISTING
+import at.corba.tools.ultrastar.duplicates.FileCompareResults.FILES_ARE_EQUAL
 
 class SongCompareResults(
     private var txtCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
@@ -17,6 +18,15 @@ class SongCompareResults(
             "BACKGROUND" -> backgroundCompareResult = compareResults
             "COVER" -> coverCompareResult = compareResults
         }
+    }
+
+    fun songsAreIdentical() : Boolean {
+        return (
+            (txtCompareResult == FILES_ARE_EQUAL) &&
+            (mp3CompareResult == FILES_ARE_EQUAL) &&
+            (videoCompareResult == FILES_ARE_EQUAL || videoCompareResult == BOTH_FILES_ARE_NOT_EXISTING) &&
+            (backgroundCompareResult == FILES_ARE_EQUAL || backgroundCompareResult == BOTH_FILES_ARE_NOT_EXISTING) &&
+            (coverCompareResult == FILES_ARE_EQUAL || coverCompareResult == BOTH_FILES_ARE_NOT_EXISTING))
     }
 }
 

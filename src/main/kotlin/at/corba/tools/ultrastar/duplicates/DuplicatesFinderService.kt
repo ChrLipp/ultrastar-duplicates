@@ -76,22 +76,24 @@ class DuplicatesFinderService {
      * @args args   List of files for the song
      */
     private fun checkForEdition(args: List<String>) : Boolean {
-        if (hasVideoInDir(args)) {
-            val deleteDir = File(args[0]).parentFile
+        return if (hasVideoInDir(args)) {
+            deleteDirectoryForFile(args[0])
+            true
+        } else
+            false
+    }
 
-            if (isTestMode) {
-                log.info("- Would delete '${deleteDir.absolutePath}'")
+    private fun deleteDirectoryForFile(filePathAsString: String) {
+        val deleteDir = File(filePathAsString).parentFile
+
+        if (isTestMode) {
+            log.info("- Would delete '${deleteDir.absolutePath}'")
+        } else {
+            log.info("- Deleting '${deleteDir.absolutePath}'")
+            if (!deleteDir.deleteRecursively()) {
+                log.error("  *** Problems while deleting '${deleteDir.absolutePath}'")
             }
-            else {
-                log.info("- Deleting '${deleteDir.absolutePath}'")
-                if (!deleteDir.deleteRecursively()) {
-                    log.error("  *** Problems while deleting '${deleteDir.absolutePath}'")
-                }
-            }
-            return true
         }
-        else
-            return false
     }
 
     /**
@@ -119,6 +121,10 @@ class DuplicatesFinderService {
         listOf("TXT", "MP3", "VIDEO", "BACKGROUND", "COVER").forEach { attribute ->
             val fileCompareResults = compareEntry(args, attribute)
             songCompareResult.setCompareResult(attribute, fileCompareResults)
+        }
+
+        if (songCompareResult.songsAreIdentical()) {
+            deleteDirectoryForFile(args[0])
         }
     }
 
