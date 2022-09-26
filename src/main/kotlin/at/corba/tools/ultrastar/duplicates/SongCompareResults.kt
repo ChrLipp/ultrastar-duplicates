@@ -3,11 +3,11 @@ package at.corba.tools.ultrastar.duplicates
 import at.corba.tools.ultrastar.duplicates.FileCompareResults.BOTH_FILES_ARE_NOT_EXISTING
 
 class SongCompareResults(
-    var txtCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
-    var mp3CompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
-    var videoCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
-    var backgroundCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
-    var coverCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING
+    private var txtCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
+    private var mp3CompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
+    private var videoCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
+    private var backgroundCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
+    private var coverCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING
 ) {
     fun setCompareResult(attribute: String, compareResults: FileCompareResults) {
         when (attribute) {
@@ -25,5 +25,5 @@ enum class FileCompareResults(val index: Int) {
     FIRST_FILE_IS_NOT_EXISTING(1),
     SECOND_FILE_IS_NOT_EXISTING(2),
     FILES_ARE_EQUAL(3),
-    FILES_AFRE_DIFFERENT(4)
+    FILES_ARE_DIFFERENT(4)
 }

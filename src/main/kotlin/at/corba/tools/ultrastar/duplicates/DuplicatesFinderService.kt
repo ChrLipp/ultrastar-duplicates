@@ -1,5 +1,6 @@
 package at.corba.tools.ultrastar.duplicates
 
+import at.corba.tools.ultrastar.duplicates.FileCompareResults.*
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import java.io.File
@@ -113,47 +114,26 @@ class DuplicatesFinderService {
     }
 
     private fun compareEntries(args: List<String>) {
-//        val result = SongCompareResults()
-//
-       // check if TXT files are identically
-        val txtCompareResult = areFilesIdentically(args[0], args[1])
-        logResult(txtCompareResult, "TXT")
+        val songCompareResult = SongCompareResults()
 
-        // check for MP3
-        val mp3Index0 = getSongAttribute(args[0], "MP3")
-        val mp3Index1 = getSongAttribute(args[1], "MP3")
-
-        val mp3CompareResult = areFilesIdentically(mp3Index0, mp3Index1)
-        logResult(mp3CompareResult, "MP3")
-
-        // check for VIDEO
-        val videoIndex0 = getSongAttribute(args[0], "VIDEO")
-        val videoIndex1 = getSongAttribute(args[1], "VIDEO")
-
-        val videoCompareResult = areFilesIdentically(videoIndex0, videoIndex1)
-        logResult(videoCompareResult, "VIDEO")
-
-        // check for BACKGROUND
-        val backgroundIndex0 = getSongAttribute(args[0], "BACKGROUND")
-        val backgroundIndex1 = getSongAttribute(args[1], "BACKGROUND")
-
-        val backgroundCompareResult = areFilesIdentically(backgroundIndex0, backgroundIndex1)
-        logResult(backgroundCompareResult, "BACKGROUND")
-
-        // check for COVER
-        val coverIndex0 = getSongAttribute(args[0], "COVER")
-        val coverIndex1 = getSongAttribute(args[1], "COVER")
-
-        val coverCompareResult = areFilesIdentically(coverIndex0, coverIndex1)
-        logResult(coverCompareResult, "COVER")
+        listOf("TXT", "MP3", "VIDEO", "BACKGROUND", "COVER").forEach { attribute ->
+            val fileCompareResults = compareEntry(args, attribute)
+            songCompareResult.setCompareResult(attribute, fileCompareResults)
+        }
     }
 
-    fun compareEntry(args: List<String>, attribute: String) {
-        val index0 = getSongAttribute(args[0], attribute)
-        val index1 = getSongAttribute(args[1], attribute)
+    fun compareEntry(args: List<String>, attribute: String) : FileCompareResults {
+        var index0 = args[0]
+        var index1 = args[1]
+
+        if (attribute != "TXT") {
+            index0 = getSongAttribute(args[0], attribute)
+            index1 = getSongAttribute(args[1], attribute)
+        }
 
         val compareResult = areFilesIdentically(index0, index1)
         logResult(compareResult, attribute)
+        return compareResult
     }
 
     fun getCRC(file : File) : Long {
@@ -175,18 +155,15 @@ class DuplicatesFinderService {
         }
 
         when (state) {
-            0 -> return FileCompareResults.BOTH_FILES_ARE_NOT_EXISTING
-            1 -> return FileCompareResults.SECOND_FILE_IS_NOT_EXISTING
-            2 -> return FileCompareResults.FIRST_FILE_IS_NOT_EXISTING
+            0 -> return BOTH_FILES_ARE_NOT_EXISTING
+            1 -> return SECOND_FILE_IS_NOT_EXISTING
+            2 -> return FIRST_FILE_IS_NOT_EXISTING
         }
 
-        val firstCRC = getCRC(file1)
-        val secondCRC = getCRC(file2)
-
-        if (firstCRC == secondCRC) {
-            return FileCompareResults.FILES_ARE_EQUAL
+        return if (getCRC(file1) == getCRC(file2)) {
+            FILES_ARE_EQUAL
         } else {
-            return FileCompareResults.FILES_AFRE_DIFFERENT
+            FILES_ARE_DIFFERENT
         }
     }
 
@@ -211,15 +188,15 @@ class DuplicatesFinderService {
 
     fun logResult(compareResults: FileCompareResults, extension: String) {
         when (compareResults) {
-            FileCompareResults.BOTH_FILES_ARE_NOT_EXISTING ->
+            BOTH_FILES_ARE_NOT_EXISTING ->
                 log.info("- both $extension files are not existing")
-            FileCompareResults.FIRST_FILE_IS_NOT_EXISTING ->
+            FIRST_FILE_IS_NOT_EXISTING ->
                 log.info("- first $extension file is not existing")
-            FileCompareResults.SECOND_FILE_IS_NOT_EXISTING ->
+            SECOND_FILE_IS_NOT_EXISTING ->
                 log.info("- second $extension file is not existing")
-            FileCompareResults.FILES_ARE_EQUAL ->
+            FILES_ARE_EQUAL ->
                 log.info("- $extension files are identical")
-            FileCompareResults.FILES_AFRE_DIFFERENT ->
+            FILES_ARE_DIFFERENT ->
                 log.info("- $extension files are different")
         }
     }
