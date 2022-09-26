@@ -1,6 +1,6 @@
-package at.corba.tools.ultrastar.duplicates
+package at.corba.tools.ultrastar.duplicates.logic
 
-import at.corba.tools.ultrastar.duplicates.FileCompareResults.*
+import at.corba.tools.ultrastar.duplicates.logic.FileCompareResults.*
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import java.io.File
@@ -25,6 +25,7 @@ class DuplicatesFinderService {
      * @args sourceDir  Directory which contains the songs
      */
     fun process(checkDir: Path, sourceDir: Path) {
+        // read files to check (may contain duplicates)
         val filesToCheck = Files.walk(checkDir)
             .filter { Files.isRegularFile(it) }
             .filter { it.toString().lowercase().endsWith(".txt") }
@@ -32,6 +33,7 @@ class DuplicatesFinderService {
                     path1, path2 -> "$path1#$path2"
             })
 
+        // read songs archive (may contain duplicates)
         val filesAvailableSongs = Files.walk(sourceDir)
             .filter { !it.toAbsolutePath().toString().startsWith(checkDir.toAbsolutePath().toString()) }
             .filter { Files.isRegularFile(it) }
@@ -40,7 +42,9 @@ class DuplicatesFinderService {
                     path1, path2 -> "$path1#$path2"
             })
 
+        // check for (and delete if requested) duplicates
         var index = 0
+        log.info("---")
         filesToCheck.forEach { (name, path) ->
             if (filesAvailableSongs.containsKey(name)) {
                 val pathList = path.split("#").toMutableList()
@@ -56,7 +60,7 @@ class DuplicatesFinderService {
      * @args name   Name of the song
      * @args args   List of files for the song
      */
-    fun checkForDelete(name: String, args: List<String>, index: Int) {
+    private fun checkForDelete(name: String, args: List<String>, index: Int) {
         // log what we have
         log.info("$index: $name")
         args.forEach {
@@ -87,6 +91,11 @@ class DuplicatesFinderService {
             false
     }
 
+    /**
+     * Deletes the whole directory for a given file.
+     * Only logs action when testmode = true.
+     * @param filePathAsString File within directory to delete
+     */
     private fun deleteDirectoryForFile(filePathAsString: String) {
         val deleteDir = File(filePathAsString).parentFile
 
@@ -105,7 +114,7 @@ class DuplicatesFinderService {
      * @args args   List of files for the song
      * @return true if an edition is available
      */
-    fun hasVideoInDir(args: List<String>) : Boolean {
+    private fun hasVideoInDir(args: List<String>) : Boolean {
         var isFirst = true
         for (entry in args) {
             if (isFirst) {
@@ -125,6 +134,7 @@ class DuplicatesFinderService {
         listOf("TXT", "MP3", "VIDEO", "BACKGROUND", "COVER").forEach { attribute ->
             val fileCompareResults = compareEntry(args, attribute)
             songCompareResult.setCompareResult(attribute, fileCompareResults)
+            songCompareResult.logResult(fileCompareResults, attribute)
         }
 
         if (songCompareResult.songsAreIdentical()) {
@@ -132,7 +142,7 @@ class DuplicatesFinderService {
         }
     }
 
-    fun compareEntry(args: List<String>, attribute: String) : FileCompareResults {
+    private fun compareEntry(args: List<String>, attribute: String) : FileCompareResults {
         var index0 = args[0]
         var index1 = args[1]
 
@@ -141,22 +151,16 @@ class DuplicatesFinderService {
             index1 = getSongAttributeAsPath(args[1], attribute)
         }
 
-        val compareResult = areFilesIdentically(index0, index1)
-        logResult(compareResult, attribute)
-        return compareResult
+        return areFilesIdentically(index0, index1, attribute)
     }
 
-    fun getCRC(file : File) : Long {
-        val crc32 = CRC32()
-        crc32.update(Files.readAllBytes(file.toPath()))
-        return crc32.value
-    }
-
-    fun areFilesIdentically(filePathAsString1 : String, filePathAsString2 : String) : FileCompareResults {
+    private fun areFilesIdentically(
+        filePathAsString1 : String, filePathAsString2 : String, attribute: String
+    ) : FileCompareResults {
         val file1 = File(filePathAsString1)
         val file2 = File(filePathAsString2)
 
-        var state: Int = 0
+        var state = 0
         if (filePathAsString1.isNotEmpty() && file1.exists()) {
             state = 1
         }
@@ -170,16 +174,24 @@ class DuplicatesFinderService {
             2 -> return FIRST_FILE_IS_NOT_EXISTING
         }
 
-        return if (getCRC(file1) == getCRC(file2)) {
-            FILES_ARE_EQUAL
+        return if (attribute == "TXT") {
+            if (getCRCforTxtFiles(file1) == getCRCforTxtFiles(file2)) {
+                FILES_ARE_EQUAL
+            } else {
+                FILES_ARE_DIFFERENT
+            }
         } else {
-            FILES_ARE_DIFFERENT
+            if (getCRC(file1) == getCRC(file2)) {
+                FILES_ARE_EQUAL
+            } else {
+                FILES_ARE_DIFFERENT
+            }
         }
     }
 
-    fun getSongAttribute(filePathAsString : String, attribute : String) : String {
+    private fun getSongAttribute(txtFilePathAsString : String, attribute : String) : String {
         var returnValue = ""
-        File(filePathAsString).forEachLine { line ->
+        File(txtFilePathAsString).forEachLine { line ->
             if (line.trim().startsWith("#")) {
                 val prefix = "#${attribute.uppercase()}:"
                 if (line.trim().startsWith(prefix)) {
@@ -193,26 +205,35 @@ class DuplicatesFinderService {
         return returnValue
     }
 
-    fun getSongAttributeAsPath(filePathAsString : String, attribute : String) : String {
-        var entry = getSongAttribute(filePathAsString, attribute)
+    private fun getSongAttributeAsPath(txtFilePathAsString : String, attribute : String) : String {
+        var entry = getSongAttribute(txtFilePathAsString, attribute)
         if (entry.isNotEmpty()) {
-            entry = File(File(filePathAsString).parent, entry).absolutePath
+            entry = File(File(txtFilePathAsString).parent, entry).absolutePath
         }
         return entry
     }
 
-    fun logResult(compareResults: FileCompareResults, extension: String) {
-        when (compareResults) {
-            BOTH_FILES_ARE_NOT_EXISTING ->
-                log.info("- both $extension files are not existing")
-            FIRST_FILE_IS_NOT_EXISTING ->
-                log.info("- first $extension file is not existing")
-            SECOND_FILE_IS_NOT_EXISTING ->
-                log.info("- second $extension file is not existing")
-            FILES_ARE_EQUAL ->
-                log.info("- $extension files are identical")
-            FILES_ARE_DIFFERENT ->
-                log.info("- $extension files are different")
+    private fun getCRC(file : File) : Long {
+        val crc32 = CRC32()
+        crc32.update(Files.readAllBytes(file.toPath()))
+        return crc32.value
+    }
+
+    private fun getCRCforTxtFiles(file : File) : Long {
+        val crc32 = CRC32()
+        file.forEachLine { line ->
+            var doHandle = true
+            if (line.startsWith("#") &&
+                !((line.startsWith("#BPM:") ||
+                   line.startsWith("#GAP:") ||
+                   line.startsWith("#VIDEOGAP:")))) {
+                doHandle = false
+            }
+
+            if (doHandle) {
+                crc32.update(line.toByteArray())
+            }
         }
+        return crc32.value
     }
 }

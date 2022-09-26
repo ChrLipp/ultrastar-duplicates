@@ -1,6 +1,7 @@
 package at.corba.tools.ultrastar.duplicates
 
 import at.corba.tools.ultrastar.duplicates.libs.FileVersionProvider
+import at.corba.tools.ultrastar.duplicates.logic.DuplicatesFinderService
 import org.springframework.stereotype.Component
 import picocli.CommandLine
 import java.nio.file.Path

@@ -1,7 +1,7 @@
-package at.corba.tools.ultrastar.duplicates
+package at.corba.tools.ultrastar.duplicates.logic
 
-import at.corba.tools.ultrastar.duplicates.FileCompareResults.BOTH_FILES_ARE_NOT_EXISTING
-import at.corba.tools.ultrastar.duplicates.FileCompareResults.FILES_ARE_EQUAL
+import at.corba.tools.ultrastar.duplicates.logic.FileCompareResults.*
+import mu.KotlinLogging
 
 class SongCompareResults(
     private var txtCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
@@ -10,6 +10,9 @@ class SongCompareResults(
     private var backgroundCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING,
     private var coverCompareResult : FileCompareResults = BOTH_FILES_ARE_NOT_EXISTING
 ) {
+    /** The logger */
+    private val log = KotlinLogging.logger {}
+
     fun setCompareResult(attribute: String, compareResults: FileCompareResults) {
         when (attribute) {
             "TXT" -> txtCompareResult = compareResults
@@ -27,6 +30,21 @@ class SongCompareResults(
             (videoCompareResult == FILES_ARE_EQUAL || videoCompareResult == BOTH_FILES_ARE_NOT_EXISTING) &&
             (backgroundCompareResult == FILES_ARE_EQUAL || backgroundCompareResult == BOTH_FILES_ARE_NOT_EXISTING) &&
             (coverCompareResult == FILES_ARE_EQUAL || coverCompareResult == BOTH_FILES_ARE_NOT_EXISTING))
+    }
+
+    fun logResult(compareResults: FileCompareResults, extension: String) {
+        when (compareResults) {
+            BOTH_FILES_ARE_NOT_EXISTING ->
+                log.info("- both $extension files are not existing")
+            FIRST_FILE_IS_NOT_EXISTING ->
+                log.info("- first $extension file is not existing")
+            SECOND_FILE_IS_NOT_EXISTING ->
+                log.info("- second $extension file is not existing")
+            FILES_ARE_EQUAL ->
+                log.info("- $extension files are identical")
+            FILES_ARE_DIFFERENT ->
+                log.info("- $extension files are different")
+        }
     }
 }
 
