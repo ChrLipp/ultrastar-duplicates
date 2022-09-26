@@ -40,11 +40,13 @@ class DuplicatesFinderService {
                     path1, path2 -> "$path1#$path2"
             })
 
+        var index = 0
         filesToCheck.forEach { (name, path) ->
             if (filesAvailableSongs.containsKey(name)) {
                 val pathList = path.split("#").toMutableList()
                 pathList.addAll(filesAvailableSongs.getValue(name).split("#"))
-                checkForDelete(name, pathList)
+                checkForDelete(name, pathList, index)
+                index += 1
             }
         }
     }
@@ -54,11 +56,13 @@ class DuplicatesFinderService {
      * @args name   Name of the song
      * @args args   List of files for the song
      */
-    fun checkForDelete(name: String, args: List<String>) {
+    fun checkForDelete(name: String, args: List<String>, index: Int) {
         // log what we have
-        log.info(name)
+        log.info("$index: $name")
         args.forEach {
             log.info("- $it")
+            log.info("  Artist  : ${getSongAttribute(it, "ARTIST")}")
+            log.info("  Songname: ${getSongAttribute(it, "TITLE")}")
         }
 
         // delete what we can
@@ -133,8 +137,8 @@ class DuplicatesFinderService {
         var index1 = args[1]
 
         if (attribute != "TXT") {
-            index0 = getSongAttribute(args[0], attribute)
-            index1 = getSongAttribute(args[1], attribute)
+            index0 = getSongAttributeAsPath(args[0], attribute)
+            index1 = getSongAttributeAsPath(args[1], attribute)
         }
 
         val compareResult = areFilesIdentically(index0, index1)
@@ -186,10 +190,15 @@ class DuplicatesFinderService {
                 return@forEachLine
             }
         }
-        if (returnValue.isNotEmpty()) {
-            returnValue = File(File(filePathAsString).parent, returnValue).absolutePath
-        }
         return returnValue
+    }
+
+    fun getSongAttributeAsPath(filePathAsString : String, attribute : String) : String {
+        var entry = getSongAttribute(filePathAsString, attribute)
+        if (entry.isNotEmpty()) {
+            entry = File(File(filePathAsString).parent, entry).absolutePath
+        }
+        return entry
     }
 
     fun logResult(compareResults: FileCompareResults, extension: String) {
